@@ -1,0 +1,163 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.result }}",
+              "value2": "harmful"
+            }
+          ]
+        }
+      },
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        600,
+        0
+      ],
+      "id": "ddb89b8d-ce97-41ba-8dd3-c5e7c125c85b"
+    },
+    {
+      "parameters": {
+        "fromEmail": "noreply@ceudivinaharmonia.org",
+        "toEmail": "anibalmf1@gmail.com",
+        "subject": "Harmful Object Detected",
+        "text": "=A harmful object was detected in the video: {{ $body.filename }}",
+        "options": {}
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -20
+      ],
+      "id": "913ab101-3142-461e-ac7b-8401cb5b8ea2",
+      "credentials": {
+        "smtp": {
+          "id": "mOSAw9Jpp439k1gY",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "1e2a00f8-55df-4b89-82e6-56cac72b40a0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3967effe-af38-4114-917d-7a8b8f94042d",
+      "name": "Webhook",
+      "webhookId": "1e2a00f8-55df-4b89-82e6-56cac72b40a0"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://host.docker.internal:8000/processed",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\"filename\": \"{{ $('Webhook').item.json.body.filename }}\"}"
+      },
+      "name": "Mark processed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        220
+      ],
+      "id": "93fa8f39-d6a8-44aa-8a3b-94f6c6bc4fa8"
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "http://host.docker.internal:8000/predict_filename",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={\"filename\": \"{{$body.filename}}\"}"
+      },
+      "name": "Predict",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "811a3b6a-3263-4fae-a93d-e2bbb2ce09fd"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Predict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Mark processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Predict": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dff2628d-5a32-48cb-a20a-84da03ebaaf9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "012a08ab8b41d36a1dbcba1cc905e3bbfe67db6bff17f7af1457b1bec45c9cae"
+  },
+  "id": "bCV8W0UufDDVhdA6",
+  "tags": []
+}
