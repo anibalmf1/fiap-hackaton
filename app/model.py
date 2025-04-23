@@ -19,6 +19,8 @@ class ModelHandler:
         else:
             self.detector = YOLO("yolov5s.pt")
 
+        self.detected_classes = set()
+
         self.device = torch.device(device)
         base = efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)
         base.classifier = nn.Linear(base.classifier[1].in_features, 2)
@@ -155,12 +157,17 @@ class ModelHandler:
 
     def predict(self, video_path):
         dets = self.detector.predict(source=video_path, verbose=False)
+        self.detected_classes.clear()
 
         for r in dets:
             for box in r.boxes:
                 cls = self.detector.model.names[int(box.cls)]
-                if cls in ["gun", "weapon"]:
+                self.detected_classes.add(cls)
+                if cls in ["gun", "weapon", "motorcycle"]:
+                    print(f"Detected classes: {list(self.detected_classes)}")
                     return "harmful"
+
+        print(f"Detected classes: {list(self.detected_classes)}")
 
         frames = extract_frames(video_path)
         if not frames:
